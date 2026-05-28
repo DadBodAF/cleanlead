@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CleanLead — RFP Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1110;
+    --surface: #161918;
+    --card: #1c1f1d;
+    --border: #2a2e2b;
+    --accent: #b8f542;
+    --accent2: #7ec420;
+    --text: #e8ede8;
+    --muted: #6b796b;
+    --gold: #f5c842;
+    --red: #ff5c5c;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+  header { border-bottom: 1px solid var(--border); padding: 18px 0; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .hstats { display: flex; gap: 20px; }
+  .hstat-n { font-size: 20px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .hstat-l { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+  .controls { padding: 20px 0 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; border-bottom: 1px solid var(--border); }
+  .cg { display: flex; flex-direction: column; gap: 5px; }
+  .cl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+  select, input[type=text] { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 13px; padding: 9px 12px; border-radius: 6px; outline: none; transition: border-color 0.15s; cursor: pointer; font-family: inherit; }
+  select:focus, input[type=text]:focus { border-color: var(--accent); }
+  select[multiple] { height: 100px; padding: 6px; }
+  select[multiple] option:checked { background: var(--accent); color: #000; }
+  .btn { font-family: inherit; font-weight: 700; font-size: 13px; padding: 9px 20px; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s; white-space: nowrap; }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-gold { background: var(--gold); color: #000; }
+  .btn-gold:hover { filter: brightness(1.1); }
+  .btn-gold:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-row { display: flex; gap: 8px; align-items: flex-end; }
+  .progress { height: 2px; background: var(--border); border-radius: 1px; margin: 14px 0 4px; overflow: hidden; display: none; }
+  .progress.on { display: block; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 1px; animation: prog 1.4s ease-in-out infinite; }
+  @keyframes prog { 0%{width:0;margin-left:0} 50%{width:55%;margin-left:22%} 100%{width:0;margin-left:100%} }
+  .progress-msg { font-size: 11px; color: var(--accent); text-align: center; display: none; padding: 2px 0 10px; letter-spacing: 0.5px; }
+  .progress-msg.on { display: block; }
+  .tabs { display: flex; gap: 2px; padding-top: 14px; border-bottom: 1px solid var(--border); }
+  .tab { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 9px 16px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.15s; display: flex; align-items: center; gap: 7px; margin-bottom: -1px; }
+  .tab:hover { color: var(--text); }
+  .tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+  .badge { background: var(--accent); color: #000; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 20px; min-width: 18px; text-align: center; }
+  .badge.gold { background: var(--gold); }
+  .leads { padding: 16px 0; }
+  .grid { display: grid; gap: 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; transition: border-color 0.15s; animation: cin 0.25s ease both; }
+  @keyframes cin { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  .card:hover { border-color: #333; }
+  .card.starred { border-color: var(--gold); background: #191700; }
+  .src-tag { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .ctitle { font-size: 14px; font-weight: 700; line-height: 1.35; margin-bottom: 4px; }
+  .ctitle a { color: var(--text); text-decoration: none; }
+  .ctitle a:hover { color: var(--accent); text-decoration: underline; }
+  .csnip { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+  .cmeta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .cm { font-size: 10px; color: var(--muted); }
+  .cactions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .star-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 10px; letter-spacing: 1px; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: all 0.15s; text-transform: uppercase; white-space: nowrap; font-family: inherit; }
+  .star-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .star-btn.on { background: var(--gold); border-color: var(--gold); color: #000; font-weight: 700; }
+  .empty { text-align: center; padding: 60px 20px; }
+  .empty-icon { font-size: 40px; opacity: 0.25; margin-bottom: 10px; }
+  .empty-title { font-size: 16px; font-weight: 700; color: var(--muted); }
+  .empty-sub { font-size: 11px; color: var(--muted); opacity: 0.55; margin-top: 4px; }
+  .error-banner { background: #2a0a0a; border: 1px solid var(--red); border-radius: 6px; padding: 10px 14px; font-size: 12px; color: var(--red); margin: 10px 0; display: none; }
+  .error-banner.on { display: block; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 50; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+  .overlay.on { display: flex; }
+  .modal { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 28px; width: 90%; max-width: 440px; }
+  .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  .modal-sub { font-size: 11px; color: var(--muted); margin-bottom: 18px; }
+  .modal input { width: 100%; margin-bottom: 10px; }
+  .modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+  .merr { font-size: 11px; color: var(--red); margin-top: 4px; display: none; }
+  .merr.on { display: block; }
+  @media(max-width:600px) { .hstats{display:none} .card{grid-template-columns:1fr} .cactions{flex-direction:row} }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="header-row">
+      <div class="logo">CleanLead<span>.</span></div>
+      <div class="hstats">
+        <div><div class="hstat-n" id="tn">0</div><div class="hstat-l">Total</div></div>
+        <div><div class="hstat-n" id="sn">0</div><div class="hstat-l">Starred</div></div>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+  <div class="controls">
+    <div class="cg" style="min-width:170px">
+      <span class="cl">Cities (hold Ctrl to multi-select)</span>
+      <select id="cities" multiple>
+        <option value="Victoria">Victoria</option>
+        <option value="Nanaimo">Nanaimo</option>
+        <option value="Duncan">Duncan</option>
+        <option value="Port Alberni">Port Alberni</option>
+        <option value="Vancouver">Vancouver</option>
+        <option value="Surrey">Surrey</option>
+        <option value="Kelowna">Kelowna</option>
+        <option value="Kamloops">Kamloops</option>
+        <option value="Prince George">Prince George</option>
+        <option value="Calgary">Calgary</option>
+        <option value="Edmonton">Edmonton</option>
+        <option value="Toronto">Toronto</option>
+        <option value="Ottawa">Ottawa</option>
+        <option value="Winnipeg">Winnipeg</option>
+        <option value="Halifax">Halifax</option>
+      </select>
+    </div>
+    <div class="cg" style="min-width:150px">
+      <span class="cl">Sources</span>
+      <select id="sources" multiple>
+        <option value="bcbid" selected>BC Bid</option>
+        <option value="merx" selected>Merx</option>
+        <option value="gov" selected>Gov Sites</option>
+        <option value="chambers" selected>Chambers</option>
+        <option value="linkedin" selected>LinkedIn</option>
+      </select>
+    </div>
+    <div class="cg" style="min-width:160px">
+      <span class="cl">Keywords</span>
+      <input type="text" id="kw" placeholder="e.g. office, school..." value="janitorial cleaning">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="searchBtn" onclick="doSearch()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search Leads
+      </button>
+      <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+      <button class="btn btn-gold" id="emailBtn" onclick="openModal()" disabled>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        Email Starred
+      </button>
+    </div>
+  </div>
+  <div class="progress" id="prog"><div class="progress-fill"></div></div>
+  <div class="progress-msg" id="progMsg">Searching…</div>
+  <div class="error-banner" id="errBanner"></div>
+  <div class="tabs">
+    <div class="tab on" id="tab-all" onclick="switchTab('all')">All Leads <span class="badge" id="b-all">0</span></div>
+    <div class="tab" id="tab-starred" onclick="switchTab('starred')">⭐ Starred <span class="badge gold" id="b-starred">0</span></div>
+  </div>
+  <div class="leads">
+    <div class="grid" id="grid">
+      <div class="empty">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No leads yet</div>
+        <div class="empty-sub">Select cities and sources, then click Search Leads</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2>Email Starred Leads</h2>
+    <div class="modal-sub" id="msub">0 leads selected</div>
+    <input type="text" id="mTo" placeholder="Your email address">
+    <div class="merr" id="merr">Please enter a valid email address.</div>
+    <input type="text" id="mSubj" placeholder="Subject line">
+    <div class="modal-btns">
+      <button class="btn btn-gold" onclick="sendEmail()" style="flex:1">Send</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+<script>
+const SOURCE_QUERIES = {
+  bcbid:    q => `site:bcbid.gov.bc.ca ${q}`,
+  merx:     q => `site:merx.com ${q}`,
+  gov:      q => `(site:.gov.bc.ca OR site:.ca/tenders OR site:.ca/rfp) ${q}`,
+  chambers: q => `(chamber of commerce OR strata OR property management) "${q}" RFQ OR tender OR contract`,
+  linkedin: q => `site:linkedin.com/jobs ${q} contract OR RFP`,
+};
+const SOURCE_LABELS = { bcbid:'BC Bid', merx:'Merx', gov:'Gov Sites', chambers:'Chambers', linkedin:'LinkedIn' };
+const SOURCE_COLORS = { bcbid:'#b8f542', merx:'#42d4f5', gov:'#f59542', chambers:'#c042f5', linkedin:'#f5c842' };
+
+let allLeads = [], starred = new Set(), currentTab = 'all';
+
+function getSelections(id) {
+  return Array.from(document.getElementById(id).selectedOptions).map(o => o.value);
+}
+
+async function searchSource(sourceKey, queryStr) {
+  const res = await fetch(`/.netlify/functions/search?q=${encodeURIComponent(queryStr)}&source=${sourceKey}`);
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
+
+const MSGS = ['Scanning BC Bid…','Querying Merx…','Checking government portals…','Searching chambers…','Pulling LinkedIn results…'];
+let msgIdx = 0, msgTimer;
+
+function setLoading(on) {
+  document.getElementById('prog').classList.toggle('on', on);
+  document.getElementById('progMsg').classList.toggle('on', on);
+  document.getElementById('searchBtn').disabled = on;
+  if (on) {
+    msgIdx = 0;
+    document.getElementById('progMsg').textContent = MSGS[0];
+    msgTimer = setInterval(() => { msgIdx = (msgIdx+1)%MSGS.length; document.getElementById('progMsg').textContent = MSGS[msgIdx]; }, 1200);
+  } else { clearInterval(msgTimer); }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errBanner');
+  el.textContent = msg; el.classList.toggle('on', !!msg);
+}
+
+async function doSearch() {
+  const cities = getSelections('cities');
+  const sources = getSelections('sources');
+  const kw = document.getElementById('kw').value.trim() || 'janitorial cleaning';
+  if (!sources.length) { alert('Select at least one source.'); return; }
+  const cityStr = cities.length ? cities.join(' OR ') : 'BC Canada';
+  const baseQuery = `${kw} RFP OR tender OR quote request ${cityStr}`;
+  setLoading(true); showError(''); allLeads = []; starred.clear(); render();
+  const promises = sources.map(s => searchSource(s, SOURCE_QUERIES[s](baseQuery)).catch(e => ({ _err: e.message, source: s })));
+  const results = await Promise.all(promises);
+  results.forEach(r => {
+    if (r._err) showError(`Search error: ${r._err}`);
+    else allLeads.push(...r);
+  });
+  setLoading(false); updateStats(); render();
+}
+
+function render() {
+  const grid = document.getElementById('grid');
+  const leads = currentTab === 'starred' ? allLeads.filter(l => starred.has(l.id)) : allLeads;
+  if (!leads.length) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">${currentTab==='starred'?'⭐':'🔍'}</div><div class="empty-title">${currentTab==='starred'?'No starred leads':'No leads yet'}</div><div class="empty-sub">${currentTab==='starred'?'Star leads from the All tab':'Select cities & sources, then click Search Leads'}</div></div>`;
+    return;
+  }
+  grid.innerHTML = leads.map((l,i) => `
+    <div class="card ${starred.has(l.id)?'starred':''}" id="card-${l.id}" style="animation-delay:${i*30}ms">
+      <div>
+        <div class="src-tag"><span class="dot" style="background:${SOURCE_COLORS[l.source]}"></span>${SOURCE_LABELS[l.source]}</div>
+        <div class="ctitle"><a href="${l.url}" target="_blank" rel="noopener">${l.title}</a></div>
+        <div class="csnip">${l.snippet}</div>
+        <div class="cmeta"><span class="cm">${l.displayUrl}</span></div>
+      </div>
+      <div class="cactions">
+        <button class="star-btn ${starred.has(l.id)?'on':''}" onclick="toggleStar('${l.id}')">${starred.has(l.id)?'⭐ Starred':'☆ Star'}</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleStar(id) {
+  starred.has(id) ? starred.delete(id) : starred.add(id);
+  updateStats(); render();
+  document.getElementById('emailBtn').disabled = starred.size === 0;
+}
+
+function updateStats() {
+  document.getElementById('tn').textContent = allLeads.length;
+  document.getElementById('sn').textContent = starred.size;
+  document.getElementById('b-all').textContent = allLeads.length;
+  document.getElementById('b-starred').textContent = starred.size;
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById(`tab-${tab}`).classList.add('on');
+  render();
+}
+
+function clearAll() {
+  allLeads = []; starred.clear(); updateStats(); render();
+  document.getElementById('emailBtn').disabled = true; showError('');
+}
+
+function openModal() {
+  document.getElementById('msub').textContent = `${starred.size} lead${starred.size!==1?'s':''} selected`;
+  document.getElementById('mTo').value = '';
+  document.getElementById('mSubj').value = `Janitorial RFP Leads — ${new Date().toLocaleDateString('en-CA')}`;
+  document.getElementById('merr').classList.remove('on');
+  document.getElementById('overlay').classList.add('on');
+}
+
+function closeModal() { document.getElementById('overlay').classList.remove('on'); }
+
+function sendEmail() {
+  const to = document.getElementById('mTo').value.trim();
+  if (!to || !/^[^@]+@[^@]+\.[^@]+$/.test(to)) { document.getElementById('merr').classList.add('on'); return; }
+  document.getElementById('merr').classList.remove('on');
+  const subj = document.getElementById('mSubj').value.trim();
+  const starredLeads = allLeads.filter(l => starred.has(l.id));
+  const body = starredLeads.map(l => `${l.title}\nSource: ${SOURCE_LABELS[l.source]}\n${l.snippet}\n${l.url}`).join('\n\n---\n\n');
+  window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  closeModal();
+}
+</script>
+</body>
+</html>
